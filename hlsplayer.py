@@ -80,8 +80,6 @@ def play():
         os.makedirs(hls_folder)
 
 
-    
-    
     for i, file in enumerate(file_list):
         # 依次为分辨率、比特率、帧数、丢包率、卡顿持续时间、卡顿次数、延迟、QoE分数
         # print("para_len: ",len(golbal_qoeParamter))
