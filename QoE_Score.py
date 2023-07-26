@@ -105,7 +105,7 @@ def main():
     capture_thread.join()
     qoe_thread.join()
     pcap_queue.join()
-    cleanup_thread.join()
+    # cleanup_thread.join()
 
 
 if __name__ == "__main__":
