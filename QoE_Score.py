@@ -50,7 +50,7 @@ def cleanup():
     while capture_flag:
         time.sleep(60)  # 每一分钟执行一次清理
         # 定期清理pcap文件，保留最近的N个文件
-        max_files = 10
+        max_files = 20
         pcap_files = glob.glob("*.pcap")
         pcap_files.sort(key=os.path.getmtime, reverse=True)
 
@@ -94,9 +94,10 @@ def main():
     qoe_thread.daemon = True
     qoe_thread.start()
 
-    cleanup_thread = threading.Thread(target=cleanup)
-    cleanup_thread.daemon = True
-    cleanup_thread.start()
+    # TODO 记得恢复
+    # cleanup_thread = threading.Thread(target=cleanup)
+    # cleanup_thread.daemon = True
+    # cleanup_thread.start()
 
     time.sleep(100)
     capture_flag = False

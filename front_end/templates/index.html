@@ -23,25 +23,116 @@
             controls
             preload="auto"
             data-setup="{}"
-            autoplay
             onerror="handleError()">
-            <source src="static/hls_folder/output.m3u8" type="application/x-mpegURL">
+            <source src="static/hls_file/output.m3u8" type="application/x-mpegURL">
         </video>
     <!-- </div> -->
     <!-- 引入video.js脚本 -->
     <script src="{{ url_for('static', filename='video.min.js') }}"></script>
     <script>
         var videoPlayer = videojs('video-player', {
-            autoplay: true,
+            autoplay: false,
             preload: 'auto'
         });
-        videoPlayer.hls.segmentLoadTime = 0.5;
+        // 记录中断播放次数
+        var pauseCount = 0;
+        // 记录暂停时间
+        var pauseTime = 0;
+        // 记录恢复时间
+        var replayTime = 0;
+        // 总中断时长
+        var totalPause = 0;
+        var date = new Date();
+        print("%d",date);
+
+        var not_first = 0;
+
+        // videoPlayer.hls.segmentLoadTime = 0.2;
+        
+
+
+        // 监听视频暂停事件
+        videoPlayer.on('pause', function() {
+            // 更新中断播放次数
+            pauseCount++;
+
+            // 获取当前视频播放的时间点
+            date = new Date();
+            pauseTime = date.getTime();
+
+            // 发送数据到后端
+            var data = {
+                'pause_count': pauseCount
+            };
+
+            // 使用Ajax发送数据
+            fetch('/update_count', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            }).then(
+                // 数据格式
+                // 可以验证是否可以和服务器建立联系
+                response => {
+                    console.log('联系服务器成功了');
+                    console.log('response---', response);
+                    return response.json()
+                },
+                error => {
+                    console.log('联系服务器失败了', error);
+                    // 返回一个新的Promise，防止继续向下走
+                    return new Promise()
+                }
+                ).then(
+                // 真正的数据
+                response => {
+                    console.log('获取数据成功了', response);
+                },
+                error => {
+                    console.log('获取数据失败了', error);
+                }
+            );
+        });
+
+        // 监听视频播放事件
+        videoPlayer.on('play', function() {
+            if (not_first == 1){
+                date = new Date();
+                replayTime = date.getTime();
+                totalPause = totalPause + (replayTime - pauseTime)/1000;
+
+                // 发送数据到后端
+                var data = {
+                    'pause_time': totalPause
+                };
+
+                // 使用Ajax发送数据
+                fetch('/update_time', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+            }else{
+                not_first = 1;
+            }
+
+        });
 
         // 播放器错误处理
         function handleError() {
             // 视频加载错误时，暂停视频播放
             videoPlayer.pause();
         }
+
+        // 监听视频结束事件
+        videoPlayer.on('ended', function() {
+            console.log("视频播放结束");
+        });
 
     </script>
 </body>

@@ -246,7 +246,10 @@ def GetDelay(pcapname, dst_ip):
 
     # 根据时间戳计算延迟
     total_packets = len(packets)
-    delaytime = abs(timestamps[ack_num]-timestamps[first_ack]) / 2 * ( total_packets - 1 )
+    print("delay_packets: ",total_packets)
+    print("timestamps[first_ack]: ",timestamps[first_ack])
+    print("timestamps[ack_num]: ",timestamps[ack_num])
+    delaytime = abs(timestamps[ack_num]-timestamps[first_ack]) / (2 * ( total_packets - 1 ))
     # print(delaytime)
     # print(delaytime*1000)
     delaytime = float(delaytime)

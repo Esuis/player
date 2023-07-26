@@ -5,6 +5,7 @@ import get_videoparm
 import common
 import threading
 from decimal import Decimal
+from front_end import app
 
 url = 'http://[2001:250:1001:1044::9d]/testvideo/output.m3u8'
 
@@ -39,8 +40,13 @@ def QoEScore(pcap_name):
     global len_flag
     len_flag = 1 if get_netparam.ScapyPcap(pcap_name).pktslen > 150 else 0
 
+    # app.count_lock.acquire()
+    # rebuffer_number = app.pause_count
+    # app.count_lock.release()
 
-
+    # app.time_lock.acquire()
+    # rebuffer_duration_sec = app.pause_time
+    # app.time_lock.release()
 
 
     videoparam = dict(
@@ -81,12 +87,14 @@ def QoEScore(pcap_name):
     apn_ready = 1
     apn_lock.release()
     
-    # print("width: ",common.golbal_qoeParamter[0])
-    # print("bitrate: ",videoparam['bitrate'])
-    # print("frame: ",videoparam['frame'])
-    # print("lossrate: ",netparam['lossrate'])
-    # print("rebuffer_duration_sec: ",rebuffer_duration_sec)
-    # print("rebuffer_number: ",rebuffer_number)
-    # print("delaytime: ",netparam['delay'])
+    print("width: ",common.golbal_qoeParamter[0])
+    print("bitrate: ",videoparam['bitrate'])
+    print("frame: ",videoparam['frame'])
+    print("lossrate: ",netparam['lossrate'])
+    print("rebuffer_duration_sec: ",rebuffer_duration_sec)
+    print("rebuffer_number: ",rebuffer_number)
+    print("delaytime: ",netparam['delay'])
+    print("cal_qoe: ",QoE_Score)
+    print("pcap_nema_cal: ",pcap_name)
 
     return QoE_Score

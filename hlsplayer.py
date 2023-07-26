@@ -147,6 +147,8 @@ def play():
 
             apn_value1 = "0b{:03b}{:01b}{:04b}{:04b}{:04b}{:04b}{:04b}{:04b}{:04b}".format(
                 user_category,user_gender,user_study,user_major,user_age,app_category,qoe_int,bandwidth_unit,bandwidth)
+            apn_value1 = apn_value1.replace('-', '')
+            # print("apn_value1: ",apn_value1)
             apn_value1 = int(apn_value1, 2)
             apn_value1 = hex(apn_value1)
             apn_value1 = int(apn_value1,16)
@@ -167,17 +169,6 @@ def play():
         download_hls_file(interfaceName, serverIP, port, option_type, apn_value1, apn_value2, url, output_path)
 
 
-        cmd = ['ffmpeg', '-hide_banner', '-loglevel', 'panic', '-i', output_path, '-f', 'sdl2', '-']
-        p = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-
-        while True:
-            frame = p.stdout.read(1920 * 1080 * 3)
-            if not frame:
-                break
-
-
-        p.terminate()
-
 
 
 
@@ -192,7 +183,7 @@ def play():
     # 清理临时文件
     shutil.rmtree(hls_folder)
     # os.remove(output_path)
-    print('清理临时文件 done')
+    print('clear flie done')
 
 def main():
     print("---------------------------V1---------------------------")
@@ -200,6 +191,7 @@ def main():
     save_thread.start()
     while True:
         play()
+        print("replay")
 
 if __name__=='__main__':
     # print("start main")
