@@ -11,7 +11,7 @@ import threading
 import cal_qoe
 import common
 
-addHeader_config_path="/home/nskeylab/lwh_file/ipv6_addHeader.so"
+addHeader_config_path="/home/nskeylab/lwh/include/ipv6_addHeader.so"
 addHeader = CDLL(addHeader_config_path)
 
 # 获取HLS文件列表
@@ -53,7 +53,7 @@ def play():
     apn_value1 = 0xFFFFFFFF
     apn_value2 = 0xFFFFFFFF
     request_path = "/testvideo/output.m3u8"
-    output_path = "../lwh_file/output.m3u8"
+    output_path = "../lwh_file/hls_folder/output.m3u8"
     user_category = 2 # 3bit
     user_gender = 1 # 1bit
     user_study = 3 # 4bit
@@ -68,16 +68,18 @@ def play():
     lossrate = 0 # 8bit
     qoe_float = 0 # 16bit
     
+    hls_folder = '../lwh_file/hls_folder'
+    if not os.path.exists(hls_folder):
+        os.makedirs(hls_folder)
 
+    
 
     # 获取HLS文件内容
     file_list = get_hls_file_list(interfaceName, serverIP, port, option_type, apn_value1, apn_value2, request_path, output_path)
     # print('获取HLS文件内容 done')
 
     # 下载TS文件
-    hls_folder = '../lwh_file/hls_folder'
-    if not os.path.exists(hls_folder):
-        os.makedirs(hls_folder)
+
 
 
     for i, file in enumerate(file_list):
@@ -167,14 +169,6 @@ def play():
         url = f'{request_path.rsplit("/", 1)[0]}/{file}'
         output_path = os.path.join(hls_folder, f'{i}.ts')
         download_hls_file(interfaceName, serverIP, port, option_type, apn_value1, apn_value2, url, output_path)
-
-
-
-
-
-
-
-
 
 
         # print('按照帧率读取并显示帧数据 done')
