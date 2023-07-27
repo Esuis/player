@@ -53,6 +53,9 @@ public:
     
     int option_type;
 
+    char* apn_value1_char;
+    char* apn_value2_char;
+
     int apn_value1;
     int apn_value2;
 
@@ -69,13 +72,13 @@ public:
 
 
     // interface_name, IP, port, option type, 64 bit apn value, request file path, output file path
-    HBH(char* interfaceName, char* serverIP, int port, int option_type, int apn_value1, int apn_value2, char* request_path, char* output_path){
+    HBH(char* interfaceName, char* serverIP, int port, int option_type, char* apn_value1, char* apn_value2, char* request_path, char* output_path){
         this->interfaceName = interfaceName;
         this->serverIP = serverIP;
         this->port = port;
         this->option_type = option_type;
-        this->apn_value1 = apn_value1;
-        this->apn_value2 = apn_value2;
+        this->apn_value1_char = apn_value1;
+        this->apn_value2_char = apn_value2;
         this->request_path = request_path;
         this->output_path = output_path;
 
@@ -135,6 +138,10 @@ public:
 
         //此处开始需要重复设置，才能更新
         /* Insert apn_value for 8-octet field */
+
+        apn_value1 = std::strtol(apn_value1_char, nullptr, 0);
+        apn_value2 = std::strtol(apn_value2_char, nullptr, 0);
+
         offset = 0;
         apn_value1 = bswap_32(apn_value1);
         apn_value2 = bswap_32(apn_value2);

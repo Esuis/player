@@ -156,6 +156,7 @@ def play():
             apn_value1 = int(apn_value1,16)
 
             apn_value2 = "0b{:04b}{:04b}{:08b}{:016b}".format(delay_unit,delay,lossrate,qoe_float)
+            apn_value2 = apn_value2.replace('-', '')
             apn_value2 = int(apn_value2, 2)
             apn_value2 = hex(apn_value2)
             apn_value2 = int(apn_value2,16)
@@ -175,6 +176,7 @@ def play():
         
 
     # 清理临时文件
+    
     shutil.rmtree(hls_folder)
     # os.remove(output_path)
     print('clear flie done')

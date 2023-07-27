@@ -31,12 +31,13 @@ class ScapyPcap:
                 # file_path = '/path/to/file.txt'
                 if os.path.isfile(pcap_name):
                     file_size = os.path.getsize(pcap_name)
-                    if file_size < 30:
-                        print(write_event.is_set())
-                        print("文件写入未完成")
-                        continue
-                    else:
-                        print(f"文件大小为: {file_size} 字节")
+                    print(f"文件大小为: {file_size} 字节")
+                    # if file_size < 30:
+                    #     print(write_event.is_set())
+                    #     print("文件写入未完成")
+                    #     continue
+                    # else:
+                    #     print(f"文件大小为: {file_size} 字节")
                 else:
                     print("文件不存在")
                     
@@ -75,6 +76,7 @@ class ScapyPcap:
         # set用于去重
         set_port = set()
         l = len(self.packets)
+        
         for i in range(0, l):
             try:
                 # 添加所有TCP数据包的端口
@@ -232,6 +234,7 @@ def GetDelay(pcapname, dst_ip):
     # 字典用于存储数据包的时间戳
     timestamps = {}
     first_pkt = 1
+    ack_num = 0
 
     for packet in packets:
         # 
@@ -247,9 +250,11 @@ def GetDelay(pcapname, dst_ip):
     # 根据时间戳计算延迟
     total_packets = len(packets)
     print("delay_packets: ",total_packets)
-    print("timestamps[first_ack]: ",timestamps[first_ack])
-    print("timestamps[ack_num]: ",timestamps[ack_num])
-    delaytime = abs(timestamps[ack_num]-timestamps[first_ack]) / (2 * ( total_packets - 1 ))
+    # print("timestamps[first_ack]: ",timestamps[first_ack])
+    # print("timestamps[ack_num]: ",timestamps[ack_num])
+    delaytime = 0
+    if ack_num and total_packets > 1 :
+        delaytime = abs(timestamps[ack_num]-timestamps[first_ack]) / (2 * ( total_packets - 1 ))
     # print(delaytime)
     # print(delaytime*1000)
     delaytime = float(delaytime)
@@ -286,7 +291,8 @@ def GetDelay(pcapname, dst_ip):
         return delaytime
     else:
         print("未捕获到延迟值")
-        return None
+        delaytime = 0
+        return delaytime
 
 
 

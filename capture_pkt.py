@@ -24,12 +24,15 @@ def capture_pkt():
         print('网络包捕获完成')
         filtered_packets = [pkt for pkt in packet if IPv6 in pkt and pkt[IPv6].dst == filter_ip]
         pcap_filename = f'capture_{pcap_counter}.pcap'
+        
 
 
         save_thread = threading.Thread(target=scapy.utils.wrpcap, args=(pcap_filename, filtered_packets))
         save_thread.start()
+        save_thread.join()
         pcap_queue.put(pcap_filename)
+        print('数据包捕获完成： ',pcap_counter)
+        print('vvvvvvvvvvvv')
         write_event.set()
-        
-
+    
         pcap_counter += 1

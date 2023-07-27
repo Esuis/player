@@ -10,7 +10,9 @@ import QoE_Score
 import threading
 import cal_qoe
 import common
+import time
 from front_end import app
+from datetime import datetime
 
 addHeader_config_path = "include/ipv6_addHeader.so"
 addHeader = CDLL(addHeader_config_path)
@@ -19,8 +21,10 @@ addHeader = CDLL(addHeader_config_path)
 def get_hls_file_list(interfaceName, serverIP, port, option_type, apn_value1, apn_value2, request_path, output_path):
 
     # print("download start")
-    status = addHeader.add_HBH(interfaceName.encode(), serverIP.encode(), int(port), int(option_type), int(apn_value1), int(apn_value2), request_path.encode(), output_path.encode())
-    
+    status = addHeader.add_HBH(interfaceName.encode(), serverIP.encode(), int(port), int(option_type), apn_value1.encode(), apn_value2.encode(), request_path.encode(), output_path.encode())
+    current_time = datetime.now()
+    formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
+    print("当前系统时间：", formatted_time)
     # print("status code: ",status)
     if status != 200:
         print("Failed to get HLS file list")
@@ -35,7 +39,10 @@ def get_hls_file_list(interfaceName, serverIP, port, option_type, apn_value1, ap
 # 下载HLS文件
 def download_hls_file(interfaceName, serverIP, port, option_type, apn_value1, apn_value2, request_path, output_path):
     # print("download start")
-    status = addHeader.add_HBH(interfaceName.encode(), serverIP.encode(), int(port), int(option_type), int(apn_value1), int(apn_value2), request_path.encode(), output_path.encode())
+    status = addHeader.add_HBH(interfaceName.encode(), serverIP.encode(), int(port), int(option_type), apn_value1.encode(), apn_value2.encode(), request_path.encode(), output_path.encode())
+    current_time = datetime.now()
+    formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
+    print("222当前系统时间：", formatted_time)
     # print("status code: ",status)
     if status != 200:
         print("Failed to get HLS file list")
@@ -51,8 +58,8 @@ def play():
     serverIP = "2001:250:1001:1044::9d"
     port = 80
     option_type = 0x3c
-    apn_value1 = 0xFFFFFFFF
-    apn_value2 = 0xFFFFFFFF
+    apn_value1 = "0xFFFFFFFF"
+    apn_value2 = "0xFFFFFFFF"
     request_path = "/testvideo/output.m3u8"
     output_path = "front_end/static/hls_file/output.m3u8"
     user_category = 2 # 3bit
@@ -68,13 +75,11 @@ def play():
     delay = 0 # 4bit
     lossrate = 0 # 8bit
     qoe_float = 0 # 16bit
-    
 
-
-    # 获取HLS文件内容
-    file_list = get_hls_file_list(interfaceName, serverIP, port, option_type, apn_value1, apn_value2, request_path, output_path)
-    # print('获取HLS文件内容 done')
-
+    ts_file_num = 0
+    play_end = 0
+    last_lossrate = 0
+    last_delay = 0
 
     # 下载TS文件
     hls_folder = 'front_end/static/hls_file'
@@ -82,12 +87,29 @@ def play():
         os.makedirs(hls_folder)
 
 
+    # 获取HLS文件内容
+    file_list = get_hls_file_list(interfaceName, serverIP, port, option_type, apn_value1, apn_value2, request_path, output_path)
+    # print('获取HLS文件内容 done')
+
+
     for i, file in enumerate(file_list):
         # 依次为分辨率、比特率、帧数、丢包率、卡顿持续时间、卡顿次数、延迟、QoE分数
         # print("para_len: ",len(golbal_qoeParamter))
         # print("apn_ready: ", cal_qoe.apn_ready)
-        if cal_qoe.apn_ready > 0:
-            cal_qoe.apn_lock.acquire()
+
+        while (i + 1) - ts_file_num > 3:
+            app.ts_lock.acquire()
+            ts_file_num = app.ts_num
+            app.ts_lock.release()
+            time.sleep(1)
+            
+        QoE_Score.apn_lock.acquire()
+        apn_is_eady = QoE_Score.apn_ready
+        QoE_Score.apn_lock.release()
+ 
+        
+        if apn_is_eady > 0:
+            cal_qoe.global_lock.acquire()
             # resolution = common.golbal_qoeParamter[0]
             # bitrate = common.golbal_qoeParamter[1]
             # fps = common.golbal_qoeParamter[2]
@@ -97,7 +119,7 @@ def play():
             delay = common.golbal_qoeParamter[6]
             qoe_int = int(common.golbal_qoeParamter[7])
             qoe_float = common.golbal_qoeParamter[7] % 1
-            cal_qoe.apn_lock.release()
+            cal_qoe.global_lock.release()
             # print("aaaaaa",resolution,bitrate,fps,lossrate,stoptime,stopnum,delay,qoe_int,qoe_float)
 
             # 信息处理
@@ -112,8 +134,14 @@ def play():
                 qoe_int = 9
                 qoe_float = 65535
             
+            if lossrate < 0:
+                lossrate = last_lossrate
+            last_lossrate = lossrate
 
-            
+            if delay == 0:
+                delay = last_delay
+            last_delay = delay
+
             delay = int(delay * 1000)
             delay_str = str(delay)
             delay_digits = len(delay_str)
@@ -152,27 +180,31 @@ def play():
             apn_value1 = apn_value1.replace('-', '')
             apn_value1 = int(apn_value1, 2)
             apn_value1 = hex(apn_value1)
-            apn_value1 = int(apn_value1,16)
+            # apn_value1 = int(apn_value1,16)
 
             apn_value2 = "0b{:04b}{:04b}{:08b}{:016b}".format(delay_unit,delay,lossrate,qoe_float)
+            apn_value2 = apn_value2.replace('-', '')
             apn_value2 = int(apn_value2, 2)
             apn_value2 = hex(apn_value2)
-            apn_value2 = int(apn_value2,16)
-            
-
-        else:
-            apn_value1 = 0xFFFFFFFF
-            apn_value2 = 0xFFFFFFFF
+            # apn_value2 = int(apn_value2,16)
         
         
         url = f'{request_path.rsplit("/", 1)[0]}/{file}'
         output_path = os.path.join(hls_folder, f'output{i}.ts')
         download_hls_file(interfaceName, serverIP, port, option_type, apn_value1, apn_value2, url, output_path)
+        print("cccccapn_value1: ",apn_value1)
+        print("cccccapn_value2: ",apn_value2)
+        print("download_num: ",i)
 
 
     
 
     # 清理临时文件
+    while play_end == 0:
+        app.end_lock.acquire()
+        play_end = app.play_end
+        app.end_lock.release()
+        time.sleep(1)
     shutil.rmtree(hls_folder)
     # os.remove(output_path)
     print('clear flie done')
@@ -182,7 +214,7 @@ def main():
     save_thread = threading.Thread(target=QoE_Score.main)
     save_thread.start()
     host = '0.0.0.0'
-    port = 12346
+    port = 12022
     player_thread = threading.Thread(target=app.app.run,args=(host, port))
     player_thread.start()
     while True:

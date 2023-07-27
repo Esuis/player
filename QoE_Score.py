@@ -11,6 +11,7 @@ import queue
 import os
 import glob
 import time
+import common
 
 
 # 全局变量
@@ -19,6 +20,8 @@ pcap_counter = 0  # pcap文件计数器
 capture_flag = True  # 捕获标志
 filter_ip = "2001:250:1001:1044::9d"
 last_qoe = 5
+apn_lock = threading.Lock()
+apn_ready = 0
 
 
 pcap_queue = queue.Queue()
@@ -51,11 +54,12 @@ def cleanup():
         time.sleep(60)  # 每一分钟执行一次清理
         # 定期清理pcap文件，保留最近的N个文件
         max_files = 20
+        delete_file_num = 5
         pcap_files = glob.glob("*.pcap")
         pcap_files.sort(key=os.path.getmtime, reverse=True)
 
         if len(pcap_files) > max_files:
-            files_to_delete = pcap_files[max_files:]
+            files_to_delete = pcap_files[-delete_file_num:]
             for file in files_to_delete:
                 os.remove(file)
                 print(f"Deleted file: {file}")
@@ -63,14 +67,24 @@ def cleanup():
         
 
 def QoE_th_1():
-    global pcap_counter, last_qoe
+    global pcap_counter, last_qoe, apn_ready
     while capture_flag:
+        count = 0
+        # 等2s，等第一个数据包抓完
+        if count == 0:
+            time.sleep(2.5)
+            count = 1
         pcap_name = pcap_queue.get()
         QoE = cal_qoe.QoEScore(pcap_name)
-        if abs(QoE - last_qoe) > 2.5 and cal_qoe.len_flag == 0:
-            QoE = last_qoe
-        last_qoe = QoE
-        print('QoE = ', QoE)
+        if common.golbal_qoeParamter[3] < 0:
+            common.golbal_qoeParamter[7] = last_qoe
+            # QoE = last_qoe
+        last_qoe = common.golbal_qoeParamter[7]
+        apn_lock.acquire()
+        apn_ready = 1
+        apn_lock.release()
+
+        print('QoE = ', common.golbal_qoeParamter[7])
 
         pcap_queue.task_done()
 
@@ -90,7 +104,7 @@ def main():
     capture_thread.daemon = True
     capture_thread.start()
 
-    qoe_thread = threading.Thread(target=QoE_th)
+    qoe_thread = threading.Thread(target=QoE_th_1)
     qoe_thread.daemon = True
     qoe_thread.start()
 
@@ -99,8 +113,8 @@ def main():
     # cleanup_thread.daemon = True
     # cleanup_thread.start()
 
-    time.sleep(100)
-    capture_flag = False
+    # time.sleep(100)
+    # capture_flag = False
 
     capture_thread.join()
     qoe_thread.join()
@@ -110,15 +124,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    # # url = 'http://playertest.longtailvideo.com/adaptive/captions/playlist.m3u8'
-    # url = 'http://playertest.longtailvideo.com/adaptive/bipbop/gear4/prog_index.m3u8'
-    # # ffprobe = get_videoparm.FFprobe()
-    # # ffprobe.parse(url)
-    # # print(ffprobe.video_info())
-    # get_netparam.onlineget()
-    # get_netparam.filter_packets('data_ori.pcap', 'data.pcap', '151.101.78.114')
-    # # WangluoPcap = get_netparam.ScapyPcap('data.pcap')
-    # # WangluoPcap.GetLossrate()
-    # # get_netparam.GetDelay('data_ori.pcap', '219.245.186.228')
-    # QoE = cal_qoe.QoEScore()
-    # print('QoE = ', QoE)

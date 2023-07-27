@@ -9,12 +9,12 @@ from front_end import app
 
 url = 'http://[2001:250:1001:1044::9d]/testvideo/output.m3u8'
 
-apn_lock = threading.Lock()
-apn_ready = 0
+global_lock = threading.Lock()
+# apn_ready = 0
 len_flag = -1
 
 def QoEScore(pcap_name):
-    global apn_ready
+    # global apn_ready
     parm = [1.26, 4.3, 1.1, 0.8, 0.6, 0.05, 0.35, 0.2]  # miu, omega, niu, eta, alpha, beta, gamma, lambda
     rebuffer_duration_sec = 0  # 卡顿时间
     rebuffer_number = 0  # 卡顿次数
@@ -40,13 +40,13 @@ def QoEScore(pcap_name):
     global len_flag
     len_flag = 1 if get_netparam.ScapyPcap(pcap_name).pktslen > 150 else 0
 
-    # app.count_lock.acquire()
-    # rebuffer_number = app.pause_count
-    # app.count_lock.release()
+    app.count_lock.acquire()
+    rebuffer_number = app.pause_count
+    app.count_lock.release()
 
-    # app.time_lock.acquire()
-    # rebuffer_duration_sec = app.pause_time
-    # app.time_lock.release()
+    app.time_lock.acquire()
+    rebuffer_duration_sec = app.pause_time
+    app.time_lock.release()
 
 
     videoparam = dict(
@@ -81,11 +81,12 @@ def QoEScore(pcap_name):
     QoE_Score = parm[3] * I_coding * R_pl - parm[4] * I_change - parm[5] * F_delay - parm[6] * I_rebuf + fei * Bu - delta * netparam['delay']
     QoE_Score = QoE_Score / 1.2
 
-    apn_lock.acquire()
+    global_lock.acquire()
     common.golbal_qoeParamter = [videoparam['width'], videoparam['bitrate'], videoparam['frame'], netparam['lossrate'],
-                          rebuffer_duration_sec, rebuffer_number, netparam['delay'], QoE_Score]
-    apn_ready = 1
-    apn_lock.release()
+                            rebuffer_duration_sec, rebuffer_number, netparam['delay'], QoE_Score]
+
+    # apn_ready = 1
+    global_lock.release()
     
     print("width: ",common.golbal_qoeParamter[0])
     print("bitrate: ",videoparam['bitrate'])

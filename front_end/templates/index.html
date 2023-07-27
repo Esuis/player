@@ -42,10 +42,19 @@
         var replayTime = 0;
         // 总中断时长
         var totalPause = 0;
+        
         var date = new Date();
-        print("%d",date);
+
+        var last_play_time = 0
+        var now_play_time = 0
+        
 
         var not_first = 0;
+        var playtime_count = 0;
+
+        var play_end = 0
+
+        const interval = 9;
 
         // videoPlayer.hls.segmentLoadTime = 0.2;
         
@@ -98,18 +107,51 @@
 
         // 监听视频播放事件
         videoPlayer.on('play', function() {
+
             if (not_first == 1){
-                date = new Date();
-                replayTime = date.getTime();
-                totalPause = totalPause + (replayTime - pauseTime)/1000;
+                return;
+            }else{
+                not_first = 1;
+            }
+
+            date = new Date();
+            replayTime = date.getTime();
+            totalPause = totalPause + (replayTime - pauseTime)/1000;
+
+
+            // 发送数据到后端
+            var data = {
+                'pause_time': totalPause
+            };
+
+            // 使用Ajax发送数据
+            fetch('/update_time', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+        });
+
+
+        // 监听视频更新事件
+        videoPlayer.on('timeupdate', function() {
+
+            playtime_count++;
+            
+            if (playtime_count >= interval){
+
+                now_play_time = videoPlayer.currentTime();
 
                 // 发送数据到后端
                 var data = {
-                    'pause_time': totalPause
+                    'now_play_time': now_play_time
                 };
 
                 // 使用Ajax发送数据
-                fetch('/update_time', {
+                fetch('/update_nowtime', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -117,11 +159,34 @@
                     body: JSON.stringify(data)
                 });
 
-            }else{
-                not_first = 1;
             }
+        });
+
+
+        // 监听视频播放完毕事件
+        videoPlayer.on('ended', function() {
+
+            play_end = 1;
+
+            // 发送数据到后端
+            var data = {
+                'play_end': play_end
+            };
+
+            // 使用Ajax发送数据
+            fetch('/update_ended', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+            console.log("视频播放结束");
 
         });
+
+
 
         // 播放器错误处理
         function handleError() {
@@ -129,10 +194,6 @@
             videoPlayer.pause();
         }
 
-        // 监听视频结束事件
-        videoPlayer.on('ended', function() {
-            console.log("视频播放结束");
-        });
 
     </script>
 </body>
