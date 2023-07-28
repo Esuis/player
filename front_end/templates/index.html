@@ -45,23 +45,24 @@
         
         var date = new Date();
 
-        var last_play_time = 0
-        var now_play_time = 0
+        var last_play_time = 0;
+        var now_play_time = 0;
         
 
         var not_first = 0;
         var playtime_count = 0;
 
-        var play_end = 0
+        var play_end = 0;
 
-        const interval = 9;
+        const interval = 4;
+
 
         // videoPlayer.hls.segmentLoadTime = 0.2;
         
 
 
         // 监听视频暂停事件
-        videoPlayer.on('pause', function() {
+        videoPlayer.on('waiting', function() {
             // 更新中断播放次数
             pauseCount++;
 
@@ -106,18 +107,16 @@
         });
 
         // 监听视频播放事件
-        videoPlayer.on('play', function() {
+        videoPlayer.on('playing', function() {
 
-            if (not_first == 1){
-                return;
-            }else{
+            if (not_first == 0){
                 not_first = 1;
+                return;
             }
-
+            
             date = new Date();
             replayTime = date.getTime();
             totalPause = totalPause + (replayTime - pauseTime)/1000;
-
 
             // 发送数据到后端
             var data = {
@@ -140,8 +139,11 @@
         videoPlayer.on('timeupdate', function() {
 
             playtime_count++;
-            
+            console.log('playtime_count: ',playtime_count);
+       
             if (playtime_count >= interval){
+                playtime_count = 0
+                console.log('interval');
 
                 now_play_time = videoPlayer.currentTime();
 
@@ -185,6 +187,7 @@
             console.log("视频播放结束");
 
         });
+
 
 
 

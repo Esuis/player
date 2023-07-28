@@ -219,7 +219,7 @@ def main():
 
     save_thread.start()
     host = '0.0.0.0'
-    port = 12030
+    port = 12033
     player_thread = threading.Thread(target=app.app.run,args=(host, port))
     player_thread.start()
     while True:

@@ -7,7 +7,7 @@ import threading
 from decimal import Decimal
 from front_end import app
 
-url = 'http://[2001:250:1001:1044::9d]/testvideo/output.m3u8'
+# url = 'http://[2001:250:1001:1044::9d]/testvideo/output.m3u8'
 
 global_lock = threading.Lock()
 # apn_ready = 0
