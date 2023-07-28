@@ -141,6 +141,10 @@ public:
 
         apn_value1 = std::strtol(apn_value1_char, nullptr, 0);
         apn_value2 = std::strtol(apn_value2_char, nullptr, 0);
+        std::cout << "apn_char_1" << apn_value1_char << std::endl;
+        std::cout << "apn_char_2" << apn_value2_char << std::endl;
+        std::cout << "Hex value 1: " << std::hex << apn_value1 << std::endl;
+        std::cout << "Hex value 2: " << std::hex << apn_value2 << std::endl;
 
         offset = 0;
         apn_value1 = bswap_32(apn_value1);

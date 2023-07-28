@@ -17,6 +17,7 @@ from datetime import datetime
 addHeader_config_path = "include/ipv6_addHeader.so"
 addHeader = CDLL(addHeader_config_path)
 
+
 # 获取HLS文件列表
 def get_hls_file_list(interfaceName, serverIP, port, option_type, apn_value1, apn_value2, request_path, output_path):
 
@@ -191,10 +192,11 @@ def play():
         
         url = f'{request_path.rsplit("/", 1)[0]}/{file}'
         output_path = os.path.join(hls_folder, f'output{i}.ts')
+        print("download_num: ",i)
         download_hls_file(interfaceName, serverIP, port, option_type, apn_value1, apn_value2, url, output_path)
         print("cccccapn_value1: ",apn_value1)
         print("cccccapn_value2: ",apn_value2)
-        print("download_num: ",i)
+        
 
 
     
@@ -211,10 +213,13 @@ def play():
 
 def main():
     print("---------------------------V1---------------------------")
-    save_thread = threading.Thread(target=QoE_Score.main)
+    
+    output_path = 'front_end/static/hls_file/output.m3u8'
+    save_thread = threading.Thread(target=QoE_Score.main,args=(output_path,))
+
     save_thread.start()
     host = '0.0.0.0'
-    port = 12022
+    port = 12030
     player_thread = threading.Thread(target=app.app.run,args=(host, port))
     player_thread.start()
     while True:

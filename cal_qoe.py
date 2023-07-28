@@ -13,7 +13,7 @@ global_lock = threading.Lock()
 # apn_ready = 0
 len_flag = -1
 
-def QoEScore(pcap_name):
+def QoEScore(pcap_name,m3u8_path):
     # global apn_ready
     parm = [1.26, 4.3, 1.1, 0.8, 0.6, 0.05, 0.35, 0.2]  # miu, omega, niu, eta, alpha, beta, gamma, lambda
     rebuffer_duration_sec = 0  # 卡顿时间
@@ -34,7 +34,7 @@ def QoEScore(pcap_name):
     )
 
     ffprobe = get_videoparm.FFprobe()
-    ffprobe.parse(url)
+    ffprobe.parse(m3u8_path)
     print(ffprobe.video_info())
 
     global len_flag

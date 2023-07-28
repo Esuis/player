@@ -63,8 +63,8 @@ class FFprobe():
         self.filepath = filepath
 
         # 发起请求获取M3U8文件内容
-        response = requests.get(self.filepath)
-        m3u8_content = response.text
+        m3u8_content = self.filepath
+        
 
         # 分割M3U8文件内容为行
         lines = m3u8_content.split('\n')
@@ -98,8 +98,8 @@ class FFprobe():
         return item
 
 
-url = "/home/nskeylab/lwh/output.m3u8"
-if __name__ == "__main__":
-    ffprobe = FFprobe()
-    ffprobe.parse(url)
-    print(ffprobe.video_info())
+# url = "/home/nskeylab/lwh/output.m3u8"
+# if __name__ == "__main__":
+#     ffprobe = FFprobe()
+#     ffprobe.parse(url)
+#     print(ffprobe.video_info())

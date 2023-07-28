@@ -66,7 +66,7 @@ def cleanup():
 
         
 
-def QoE_th_1():
+def QoE_th_1(m3u8_path):
     global pcap_counter, last_qoe, apn_ready
     while capture_flag:
         count = 0
@@ -75,16 +75,22 @@ def QoE_th_1():
             time.sleep(2.5)
             count = 1
         pcap_name = pcap_queue.get()
-        QoE = cal_qoe.QoEScore(pcap_name)
+        QoE = cal_qoe.QoEScore(pcap_name,m3u8_path)
         if common.golbal_qoeParamter[3] < 0:
             common.golbal_qoeParamter[7] = last_qoe
+            common.golbal_qoeParamter[6] = last_delay
+            common.golbal_qoeParamter[3] = last_loss
             # QoE = last_qoe
         last_qoe = common.golbal_qoeParamter[7]
+        last_delay = common.golbal_qoeParamter[6]
+        last_loss = common.golbal_qoeParamter[3]
         apn_lock.acquire()
         apn_ready = 1
         apn_lock.release()
 
         print('QoE = ', common.golbal_qoeParamter[7])
+        print('aaaaaloss = ', common.golbal_qoeParamter[3])
+        print('aaaaadelay = ', common.golbal_qoeParamter[6])
 
         pcap_queue.task_done()
 
@@ -98,13 +104,21 @@ def QoE_th():
         pcap_queue.task_done()
 
 
-def main():
+def main(m3u8_path):
     global capture_flag
+
+
+    print("yes")
+    while True:
+        print(os.path.exists(m3u8_path))
+        if os.path.exists(m3u8_path):
+            break
+    
     capture_thread = threading.Thread(target=capture_pkt)
     capture_thread.daemon = True
     capture_thread.start()
 
-    qoe_thread = threading.Thread(target=QoE_th_1)
+    qoe_thread = threading.Thread(target=QoE_th_1, args=(m3u8_path,))
     qoe_thread.daemon = True
     qoe_thread.start()
 

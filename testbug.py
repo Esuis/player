@@ -264,12 +264,8 @@
 #     pass
 
 
+import math
 
-import subprocess
-
-# 本地M3U8文件路径
-m3u8_file_path = "/home/nskeylab/lwh_file/hls_folder/output.m3u8"
-
-# 使用subprocess运行ffplay命令
-ffplay_cmd = f"ffplay {m3u8_file_path}"
-subprocess.run(ffplay_cmd, shell=True)
+delay = 0.000001
+delay = int(delay * 1000)
+print(delay)

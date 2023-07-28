@@ -230,6 +230,7 @@ def filter_packets(input_file, output_file, filter_ip):
 def GetDelay(pcapname, dst_ip):
 
     packets = scapy.utils.rdpcap(pcapname)
+    print("GetDelay_pcapname: ",pcapname)
 
     # 字典用于存储数据包的时间戳
     timestamps = {}
@@ -238,7 +239,7 @@ def GetDelay(pcapname, dst_ip):
 
     for packet in packets:
         # 
-        if packet.haslayer(IPv6) and packet[IPv6].dst == dst_ip:  # dst_ip为server地址
+        if packet.haslayer(IPv6) and packet[IPv6].dst == dst_ip and packet.haslayer(TCP):  # dst_ip为server地址
             
             timestamp = packet.time
             ack_num = packet[TCP].ack
@@ -252,7 +253,7 @@ def GetDelay(pcapname, dst_ip):
     print("delay_packets: ",total_packets)
     # print("timestamps[first_ack]: ",timestamps[first_ack])
     # print("timestamps[ack_num]: ",timestamps[ack_num])
-    delaytime = 0
+    delaytime = -1
     if ack_num and total_packets > 1 :
         delaytime = abs(timestamps[ack_num]-timestamps[first_ack]) / (2 * ( total_packets - 1 ))
     # print(delaytime)
@@ -286,7 +287,7 @@ def GetDelay(pcapname, dst_ip):
         # print("未捕获到延迟值")
         # return None
 
-    if delaytime > 0:
+    if delaytime >= 0:
 
         return delaytime
     else:
