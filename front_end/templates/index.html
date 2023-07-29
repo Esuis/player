@@ -56,6 +56,13 @@
 
         const interval = 4;
 
+        var timerId;
+
+        var time_update_1s = 0;
+
+        var pauseTime_update_1s = 0;
+
+
 
         // videoPlayer.hls.segmentLoadTime = 0.2;
         
@@ -104,6 +111,34 @@
                     console.log('获取数据失败了', error);
                 }
             );
+
+            // 启动定时器，每秒向后端发送数据
+            timerId = setInterval(function() {
+                // 向后端发送数据的代码
+                
+                date = new Date();
+                time_update_1s = date.getTime();
+                pauseTime_update_1s = totalPause + (time_update_1s - pauseTime)/1000;
+
+                // 发送数据到后端
+                var data = {
+                    'pause_time': pauseTime_update_1s
+                };
+
+                // 使用Ajax发送数据
+                fetch('/update_time', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+            }, 1000); // 1000毫秒 = 1秒
+
+
+
+
         });
 
         // 监听视频播放事件
@@ -114,6 +149,7 @@
                 return;
             }
             
+            clearInterval(timerId); // 停止定时器的执行
             date = new Date();
             replayTime = date.getTime();
             totalPause = totalPause + (replayTime - pauseTime)/1000;
