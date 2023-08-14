@@ -43,7 +43,6 @@ public:
     socklen_t maxlen = 128;
 
     string interfaceName;
-    
 
     //HBH defination variable
     void* extbuf;
@@ -54,11 +53,16 @@ public:
     
     int option_type;
 
+    char* apn_value1_char;
+    char* apn_value2_char;
+    char* apn_value3_char;
+
     int apn_value1;
     int apn_value2;
+    int apn_value3;
 
     string myrequest;
-    
+
     int statusCode;
 
     // save file
@@ -66,16 +70,18 @@ public:
     ssize_t bytesRead;
     bool headerEnded = false;
     string output_path;
-    
+
+
 
     // interface_name, IP, port, option type, 64 bit apn value, request file path, output file path
-    HBH(char* interfaceName, char* serverIP, int port, int option_type, int apn_value1, int apn_value2, char* request_path, char* output_path){
+    HBH(char* interfaceName, char* serverIP, int port, int option_type, char* apn_value1, char* apn_value2, char* apn_value3, char* request_path, char* output_path){
         this->interfaceName = interfaceName;
         this->serverIP = serverIP;
         this->port = port;
         this->option_type = option_type;
-        this->apn_value1 = apn_value1;
-        this->apn_value2 = apn_value2;
+        this->apn_value1_char = apn_value1;
+        this->apn_value2_char = apn_value2;
+        this->apn_value3_char = apn_value3;
         this->request_path = request_path;
         this->output_path = output_path;
 
@@ -84,7 +90,7 @@ public:
 
     int operator()(){
 
-        printf("v10\n");
+        // printf("v11\n");
         memset(ip, 0, sizeof(ip));
         strcpy(ip, serverIP.c_str());
         error = getaddrinfo(ip, NULL, NULL, &result);
@@ -92,7 +98,7 @@ public:
             perror("getaddrinfo error");
         }
         sa = result->ai_addr;
-
+        
         if ((m_sock = socket(AF_INET6, SOCK_STREAM, 0)) < 0) {
             perror("socket create failed");
             ret = -1;
@@ -103,17 +109,17 @@ public:
         currentlen = inet6_opt_init(NULL, 0);
         if (currentlen == -1)
             return (-1);
-        printf("Hop by Hop length: %d\n", currentlen);
+        // printf("Hop by Hop length_init: %d\n", currentlen);
 
-        currentlen = inet6_opt_append(NULL, 0, currentlen, option_type, 8, 8, NULL);
+        currentlen = inet6_opt_append(NULL, 0, currentlen, option_type, 12, 4, NULL);
         if (currentlen == -1)
             return (-1);
-        printf("Hop by Hop length: %d\n", currentlen);
+        // printf("Hop by Hop length_append: %d\n", currentlen);
 
         currentlen = inet6_opt_finish(NULL, 0, currentlen);
         if (currentlen == -1)
             return (-1);
-        printf("Hop by Hop length: %d\n", currentlen);
+        // printf("Hop by Hop length_finish: %d\n", currentlen);
 
         extlen = currentlen;
         extbuf = malloc(extlen);
@@ -125,22 +131,36 @@ public:
         currentlen = inet6_opt_init(extbuf, extlen);
         if (currentlen == -1)
             return (-1);
-        printf("currentlen_init:%d\n", currentlen);
-        printf("extlen:%d\n", extlen);
+        // printf("currentlen_init:%d\n", currentlen);
+        // printf("extlen:%d\n", extlen);
         // 此处databuf已经与extbuf产生联系
-        currentlen = inet6_opt_append(extbuf, extlen, currentlen, option_type, 8, 8, &databuf);
+        currentlen = inet6_opt_append(extbuf, extlen, currentlen, option_type, 12, 4, &databuf);
         if (currentlen == -1)
             return (-1);
-        printf("currentlen_append:%d\n", currentlen);
+        // printf("currentlen_append:%d\n", currentlen);
 
         //此处开始需要重复设置，才能更新
         /* Insert apn_value for 8-octet field */
+
+        apn_value1 = std::strtol(apn_value1_char, nullptr, 0);
+        apn_value2 = std::strtol(apn_value2_char, nullptr, 0);
+        apn_value3 = std::strtol(apn_value3_char, nullptr, 0);
+        // std::cout << "apn_char_1" << apn_value1_char << std::endl;
+        // std::cout << "apn_char_2" << apn_value2_char << std::endl;
+        // std::cout << "apn_char_3" << apn_value3_char << std::endl;
+        // std::cout << "Hex value 1: " << std::hex << apn_value1 << std::endl;
+        // std::cout << "Hex value 2: " << std::hex << apn_value2 << std::endl;
+        // std::cout << "Hex value 3: " << std::hex << apn_value3 << std::endl;
+
         offset = 0;
         apn_value1 = bswap_32(apn_value1);
         apn_value2 = bswap_32(apn_value2);
+        apn_value3 = bswap_32(apn_value3);
         offset = inet6_opt_set_val(databuf, offset, &apn_value1, sizeof(apn_value1));
         offset = inet6_opt_set_val(databuf, offset, &apn_value2, sizeof(apn_value2));
+        offset = inet6_opt_set_val(databuf, offset, &apn_value3, sizeof(apn_value3));
         currentlen = inet6_opt_finish(extbuf, extlen, currentlen);
+        // printf("currentlen_finish: %d\n", currentlen);
         if (currentlen == -1)
             return (-1);
         /* extbuf and extlen are now completely formatted */
@@ -149,7 +169,7 @@ public:
         setsockopt(m_sock, SOL_SOCKET, SO_BINDTODEVICE, interfaceName.c_str(), interfaceName.size());
         setsockopt(m_sock, IPPROTO_IPV6, IPV6_HOPOPTS, extbuf, currentlen);
         inet_ntop(AF_INET6, &(((struct sockaddr_in6*)sa)->sin6_addr), ip, maxlen);
-        printf("socket created ipv6\n");
+        // printf("socket created ipv6\n");
         
         // set socket struct
         bzero(&svraddr_6, sizeof(svraddr_6));
@@ -176,7 +196,7 @@ public:
             perror("connect");
             return -1;
         }
-        printf("connect success!\n");
+        // printf("connect success!\n");
         // socket connect
 
         myrequest = "GET " + request_path + " HTTP/1.1\r\n"
@@ -226,8 +246,8 @@ public:
         }
 
         outputFile.close();
-        cout << "response ok" << endl;
-        cout << "status:" << statusCode << endl;
+        // cout << "response ok" << endl;
+        // cout << "status:" << statusCode << endl;
 
         // close connect
         close(m_sock);

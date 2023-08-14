@@ -33,6 +33,11 @@ def QoEScore(pcap_name,m3u8_path):
         delay=get_netparam.GetDelay(pcap_name, '2001:250:1001:1044::9d')
     )
 
+    if netparam['lossrate'] < 0:
+        netparam['lossrate'] = common.golbal_lossrate
+    if netparam['delay'] < 0:
+        netparam['delay'] = common.golbal_delay
+
     ffprobe = get_videoparm.FFprobe()
     ffprobe.parse(m3u8_path)
     print(ffprobe.video_info())
@@ -52,7 +57,13 @@ def QoEScore(pcap_name,m3u8_path):
     videoparam = dict(
         width=ffprobe.video_info()['height_width'][1],
         frame=ffprobe.video_info()['frame_num'],
-        bitrate=ffprobe.video_info()['bit_rate']
+
+        # 注意此处的修改------------------------------------------------
+
+        # bitrate=ffprobe.video_info()['bit_rate']
+        bitrate = 1536
+
+        # 注意此处的修改------------------------------------------------
     )
 
     p1 = 3.5 - (3.5 / (1 + (videoparam['bitrate'] / 180)))

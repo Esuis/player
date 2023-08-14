@@ -19,7 +19,6 @@ capture_duration = 2  # 捕获持续时间（秒）
 pcap_counter = 0  # pcap文件计数器
 capture_flag = True  # 捕获标志
 filter_ip = "2001:250:1001:1044::9d"
-last_qoe = 5
 apn_lock = threading.Lock()
 apn_ready = 0
 
@@ -67,7 +66,7 @@ def cleanup():
         
 
 def QoE_th_1(m3u8_path):
-    global pcap_counter, last_qoe, apn_ready
+    global pcap_counter, apn_ready
     while capture_flag:
         count = 0
         # 等2s，等第一个数据包抓完
@@ -76,21 +75,15 @@ def QoE_th_1(m3u8_path):
             count = 1
         pcap_name = pcap_queue.get()
         QoE = cal_qoe.QoEScore(pcap_name,m3u8_path)
-        if common.golbal_qoeParamter[3] < 0:
-            common.golbal_qoeParamter[7] = last_qoe
-            common.golbal_qoeParamter[6] = last_delay
-            common.golbal_qoeParamter[3] = last_loss
+        # if common.golbal_qoeParamter[3] < 0:
+        #     common.golbal_qoeParamter[7] = last_qoe
             # QoE = last_qoe
-        last_qoe = common.golbal_qoeParamter[7]
-        last_delay = common.golbal_qoeParamter[6]
-        last_loss = common.golbal_qoeParamter[3]
+        # last_qoe = common.golbal_qoeParamter[7]
+        common.golbal_delay = common.golbal_qoeParamter[6]
+        common.golbal_lossrate = common.golbal_qoeParamter[3]
         apn_lock.acquire()
         apn_ready = 1
         apn_lock.release()
-
-        print('QoE = ', common.golbal_qoeParamter[7])
-        print('aaaaaloss = ', common.golbal_qoeParamter[3])
-        print('aaaaadelay = ', common.golbal_qoeParamter[6])
 
         pcap_queue.task_done()
 

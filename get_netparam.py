@@ -292,7 +292,7 @@ def GetDelay(pcapname, dst_ip):
         return delaytime
     else:
         print("未捕获到延迟值")
-        delaytime = 0
+        
         return delaytime
 
 
