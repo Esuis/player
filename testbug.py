@@ -177,7 +177,7 @@ def cal(rebuffer_number,rebuffer_duration_sec):
 
     r1 = -(0.07 * rebuffer_duration_sec + 0.19) * rebuffer_number
     r2 = 0 if rebuffer_number == 0 else rebuffer_number * 0.2
-    I_rebuf = 2 * math.exp(r1) + r2
+    I_rebuf = 2*math.exp(r1) + r2
 
     I_change = 0
     F_delay = f_delaytime
@@ -190,8 +190,8 @@ def cal(rebuffer_number,rebuffer_duration_sec):
 
     print("rebuffer_number: ",rebuffer_number)
     print("rebuffer_duration_sec: ",rebuffer_duration_sec)
-    print(r1)
-    print(r2)
+    # print(r1)
+    # print(r2)
     print("I_rebuf: ",I_rebuf)
     
     # print(parm[6] * I_rebuf)
@@ -211,4 +211,17 @@ def cal(rebuffer_number,rebuffer_duration_sec):
 
 
 cal(0,0)
-cal(2,10)
+cal(1,1)
+cal(1,2)
+cal(1,5)
+cal(2,1)
+cal(2,2)
+cal(2,5)
+cal(3,5)
+cal(3,7)
+cal(3,10)
+cal(5,5)
+cal(5,10)
+cal(5,20)
+cal(1,200)
+# print(math.exp(-1))

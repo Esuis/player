@@ -89,7 +89,7 @@ def QoEScore(pcap_name,m3u8_path):
     if netparam['delay'] is None:
         netparam['delay'] = 0
 
-    QoE_Score = parm[3] * I_coding * R_pl - parm[4] * I_change - parm[5] * F_delay - parm[6] * I_rebuf + fei * Bu - delta * netparam['delay']
+    QoE_Score = parm[3] * I_coding * R_pl - parm[4] * I_change - parm[5] * F_delay + parm[6] * I_rebuf + fei * Bu - delta * netparam['delay']
     QoE_Score = QoE_Score / 1.2
 
     global_lock.acquire()

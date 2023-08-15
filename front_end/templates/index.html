@@ -10,16 +10,17 @@
         .video-js {
             width: 1728px;
             height: 720px;
+            margin: 0 auto;
         }
     </style>
 </head>
-<body>
+<body style="text-align: center;">
     <h1>HLS视频播放器</h1>
     <!-- video.js播放器 -->
     <!-- <div id="player" style="width: 1728px;height: 720px;"> -->
         <video
             id="video-player"
-            class="video-js vjs-default-skin"
+            class="video-js vjs-default-skin vjs-big-play-centered"
             controls
             preload="auto"
             data-setup="{}"

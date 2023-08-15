@@ -1,4 +1,3 @@
-
 import subprocess
 import os
 import shutil
@@ -241,7 +240,7 @@ def main():
 
     save_thread.start()
     host = '0.0.0.0'
-    port = 12038
+    port = 12395
     player_thread = threading.Thread(target=app.app.run,args=(host, port))
     player_thread.start()
     while True:

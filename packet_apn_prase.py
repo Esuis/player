@@ -7,10 +7,10 @@ from scapy.layers.inet6 import IPv6
 import scapy
 
 
-
+flow_info = {}
 
 # 定义回调函数来处理捕获的数据包
-def process_packet(packet):
+def packet_callback(packet):
     if IPv6 in packet and packet.haslayer("IPv6ExtHdrHopByHop"):
         # 获取HBH信息
         hbh_header = packet["IPv6ExtHdrHopByHop"]
@@ -19,54 +19,39 @@ def process_packet(packet):
         # 查找自定义的HBH选项
         for option in options:
             if option.otype == 0x3c:
-                print("Scapy6 Unknown Option:")
-                print("otype: {}".format(option.otype))
-                print("optlen: {}".format(option.optlen))
-                print("optdata: {}".format(binascii.hexlify(option.optdata)))
+                # print("Scapy6 Unknown Option:")
+                # print("otype: {}".format(option.otype))
+                # print("optlen: {}".format(option.optlen))
+                # print("optdata: {}".format(binascii.hexlify(option.optdata)))
                 num = int(binascii.hexlify(option.optdata),16)
-                print("optdata:{}".format(bin(num)[2:]))
-
-                #掩码，用于按位获取信息
-                mask_usr       = 0b1110000000000000000000000000000000000000000000000000000000000000
-                mask_sex       = 0b0001000000000000000000000000000000000000000000000000000000000000
-                mask_edu       = 0b0000111100000000000000000000000000000000000000000000000000000000
-                mask_major     = 0b0000000011110000000000000000000000000000000000000000000000000000
-                mask_age       = 0b0000000000001111000000000000000000000000000000000000000000000000
-                mask_app       = 0b0000000000000000111100000000000000000000000000000000000000000000
-                mask_qoe_i     = 0b0000000000000000000011110000000000000000000000000000000000000000
-                mask_bandwidth = 0b0000000000000000000000001111111100000000000000000000000000000000
-                mask_delay     = 0b0000000000000000000000000000000011111111000000000000000000000000
-                mask_loss      = 0b0000000000000000000000000000000000000000111111110000000000000000
-                mask_qoe_f     = 0b0000000000000000000000000000000000000000000000001111111111111111
+                # print("optdata:{}".format(bin(num)[2:]))
                 
                 #获取到的二进制APN信息
-                QoE_usr       = (num & mask_usr) >> 61       #用户类型
-                QoE_sex       = (num & mask_sex) >> 60       #性别
-                QoE_edu       = (num & mask_edu) >> 56       #教育程度
-                QoE_major     = (num & mask_major) >> 52     #专业
-                QoE_age       = (num & mask_age) >> 48       #年龄
-                QoE_app       = (num & mask_app) >> 44       #应用类型
-                QoE_qoe_i     = (num & mask_qoe_i) >> 40     #QoE得分整数部分
-                QoE_bandwidth = (num & mask_bandwidth) >> 32  #带宽
-                QoE_delay     = (num & mask_delay) >> 24     #时延
-                QoE_loss      = (num & mask_loss) >> 16      #丢包率
-                QoE_qoe_f     = (num & mask_qoe_f)           #QoE得分小数部分
-
+                QoE_usr       = num >> 93       #用户类型
+                QoE_sex       = (num >> 92) & 0b1       #性别
+                QoE_edu       = (num >> 88) & 0b1111      #教育程度
+                QoE_major     = (num >> 84) & 0b1111     #专业
+                QoE_age       = (num >> 80) & 0b1111       #年龄
+                QoE_app       = (num >> 76) & 0b1111       #应用类型
+                QoE_qoe_i     = (num >> 72) & 0b1111     #QoE得分整数部分
+                QoE_loss      = (num >> 64) & 0b11111111      #丢包率
+                QoE_delay     = (num >> 48) & 0b1111111111111111     #时延
+                QoE_qoe_f     = (num >> 32) & 0b1111111111111111           #QoE得分小数部分
+                QoE_bandwidth = num & 0b11111111111111111111111111111111  #带宽
 
                 #打印二进制APN信息
-                print("QoE_usr: {}".format(bin(QoE_usr)[2:]))
-                print("QoE_sex: {}".format(bin(QoE_sex)[2:]))
-                print("QoE_edu: {}".format(bin(QoE_edu)[2:]))
-                print("QoE_major: {}".format(bin(QoE_major)[2:]))
-                print("QoE_age: {}".format(bin(QoE_age)[2:]))
-                print("QoE_app: {}".format(bin(QoE_app)[2:]))
-                print("QoE_qoe_i: {}".format(bin(QoE_qoe_i)[2:]))
-                print("QoE_bandwith: {}".format(bin(QoE_bandwidth)[2:]))
-                print("QoE_delay: {}".format(bin(QoE_delay)[2:]))
-                print("QoE_loss: {}".format(bin(QoE_loss)[2:]))
-                print("QoE_qoe_f: {}".format(bin(QoE_qoe_f)[2:]))
-
-                print("--------------------------------")
+                # print("QoE_usr: {}".format(bin(QoE_usr)[2:]))
+                # print("QoE_sex: {}".format(bin(QoE_sex)[2:]))
+                # print("QoE_edu: {}".format(bin(QoE_edu)[2:]))
+                # print("QoE_major: {}".format(bin(QoE_major)[2:]))
+                # print("QoE_age: {}".format(bin(QoE_age)[2:]))
+                # print("QoE_app: {}".format(bin(QoE_app)[2:]))
+                # print("QoE_qoe_i: {}".format(bin(QoE_qoe_i)[2:]))
+                # print("QoE_bandwith: {}".format(bin(QoE_bandwidth)[2:]))
+                # print("QoE_delay: {}".format(bin(QoE_delay)[2:]))
+                # print("QoE_loss: {}".format(bin(QoE_loss)[2:]))
+                # print("QoE_qoe_f: {}".format(bin(QoE_qoe_f)[2:]))
+                # print("--------------------------------")
 
                 #处理QoE得分的函数
                 def handle_qoe(qoe_i, qoe_f):
@@ -115,8 +100,8 @@ def process_packet(packet):
                 major       = int(bin(QoE_major), 2)
                 age         = int(bin(QoE_age), 2)
                 app         = int(bin(QoE_app), 2)
-                bandwidth   = handle_net(QoE_bandwidth)
-                delay       = handle_net(QoE_delay)
+                bandwidth   = int(bin(QoE_bandwidth), 2)
+                delay       = int(bin(QoE_delay), 2)
                 loss        = handle_net(QoE_loss)
                 qoe         = handle_qoe(QoE_qoe_i, QoE_qoe_f)
 
@@ -130,21 +115,59 @@ def process_packet(packet):
                 print("时延: {}".format(delay))
                 print("丢包率: {}".format(loss))
                 print("qoe分数: {}".format(qoe))
-
-
-                #打印IPv6的地址和TCP端口
-                if packet.haslayer(IPv6):
-                    print("Packet:")
-                    print("Source IPv6:", packet[IPv6].src)
-                    print("Destination IPv6:", packet[IPv6].dst)
-
-                    if packet.haslayer(TCP):
-                        print("TCP Source Port:", packet[TCP].sport)
-                        print("TCP Destination Port", packet[TCP].dport)
-
                 print("--------------------------------")
 
 
-pcap_name = "capture_6.pcap"
+                #打印IPv6的地址和TCP端口
+                src_ipv6 = packet[IPv6].src
+                dst_ipv6 = packet[IPv6].dst
+                # print("Packet:")
+                # print("Source IPv6:", src_ipv6)
+                # print("Destination IPv6:", dst_ipv6)
+                # if packet.haslayer(TCP):
+                #     print("TCP Source Port:", packet[TCP].sport)
+                #     print("TCP Destination Port", packet[TCP].dport)
+                # print("--------------------------------")
+
+                                
+                #数据包头中的apn信息存储在字典中
+                apn_info = {
+                    "src_ipv6":src_ipv6,
+                    "dst_ipv6":dst_ipv6,
+                    "usr":usr,
+                    "sex":sex,
+                    "edu":edu,
+                    "major":major,
+                    "age":age,
+                    "app":app,
+                    "bandwidth":bandwidth,
+                    "delay":delay,
+                    "loss":loss,
+                    "qoe":qoe
+                }
+
+                session = (src_ipv6, dst_ipv6)
+                if session not in flow_info:
+                    flow_info[session] = []
+                    flow_info[session].append(apn_info)
+                
+
+                # if qoe < 3:
+
+                #     command = "ovs-vsctl set queue"
+                #     uuid = "eeb42583-7e72-4cd1-8f69-5a9dc4afea94"
+                #     other_config = "other-config:min-rate=600000 other-config:max-rate=1000000"
+                #     send_queue_command(command, uuid, other_config)
+
+                #     command = "ovs-ofctl add-flow"
+                #     bridge = "s2"
+                #     other_config = "ipv6,ipv6_dst=2001:250:1001:1044::33,in_port=s2-eth3,actions=set_queue:2,output=eno2"
+                #     send_flow_command(command,bridge,other_config)
+
+
+                # print("--------------------------------")
+
+
+pcap_name = "capture_302.pcap"
 packets = scapy.utils.rdpcap(pcap_name)
-process_packet(packets[1])
+packet_callback(packets[1])
