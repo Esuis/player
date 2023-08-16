@@ -86,13 +86,13 @@ def QoE_th_1(m3u8_path,file_name):
     global pcap_counter, apn_ready
     save_count = 0
 
-    # ^C处理，避免文件保存过程中程序意外终止损坏文件
-    def signal_handler(sig, frame):
-        print("Received SIGINT (Ctrl+C). Exiting gracefully.")
-        qoe_save_thread.join()
-        exit(0)
+    # ^C处理，避免文件保存过程中程序意外终止损坏文件，但不可用于子线程，此处无效
+    # def signal_handler(sig, frame):
+    #     print("Received SIGINT (Ctrl+C). Exiting gracefully.")
+    #     qoe_save_thread.join()
+    #     exit(0)
 
-    signal.signal(signal.SIGINT, signal_handler)
+    # signal.signal(signal.SIGINT, signal_handler)
 
 
     while capture_flag:
@@ -104,7 +104,7 @@ def QoE_th_1(m3u8_path,file_name):
         pcap_name = pcap_queue.get()
         QoE = cal_qoe.QoEScore(pcap_name,m3u8_path)
 
-        # 注意qoe文件写入保存时不可中断，使用signal处理中断信号
+        # 注意qoe文件写入保存时不可中断，由于本系统计算qoe存在较长时间间隔，应在该时间间隔内退出程序
         common.golbal_qoe_save.append(QoE)
         # save_count = save_count + 1
         current_time = datetime.now()
