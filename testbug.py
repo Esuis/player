@@ -14,7 +14,7 @@
 # from front_end import app
 # from datetime import datetime
 
-# addHeader_config_path = "include/ipv6_addHeader_test.so"
+# addHeader_config_path = "include/ipv6_addHeader.so"
 # addHeader = CDLL(addHeader_config_path)
 
 
@@ -124,104 +124,176 @@
 
 
 
-import math
+# import math
 
-# from front_end import app
+# # from front_end import app
 
-# url = 'http://[2001:250:1001:1044::9d]/testvideo/output.m3u8'
+# # url = 'http://[2001:250:1001:1044::9d]/testvideo/output.m3u8'
 
-def cal(rebuffer_number,rebuffer_duration_sec):
+# def cal(rebuffer_number,rebuffer_duration_sec):
 
-    # global apn_ready
-    parm = [1.26, 4.3, 1.1, 0.8, 0.6, 0.05, 0.35, 0.2]  # miu, omega, niu, eta, alpha, beta, gamma, lambda
-    fei = 1
-    Bu = 1  # 视频带宽
-    delta = 1
-    f_delaytime = 0
-
-
-    #
-
-    #
-
-    netparam = dict(
-        lossrate=0,
-        delay=0
-    )
+#     # global apn_ready
+#     parm = [1.26, 4.3, 1.1, 0.8, 0.6, 0.05, 0.35, 0.2]  # miu, omega, niu, eta, alpha, beta, gamma, lambda
+#     fei = 1
+#     Bu = 1  # 视频带宽
+#     delta = 1
+#     f_delaytime = 0
 
 
-    videoparam = dict(
-        width=1080,
-        frame=24,
+#     #
 
-        # 注意此处的修改------------------------------------------------
+#     #
 
-        # bitrate=ffprobe.video_info()['bit_rate']
-        bitrate = 1536
+#     netparam = dict(
+#         lossrate=0,
+#         delay=0
+#     )
 
-        # 注意此处的修改------------------------------------------------
-    )
 
-    p1 = 3.5 - (3.5 / (1 + (videoparam['bitrate'] / 180)))
-    p2 = -(math.pow((math.log(videoparam['frame'], math.e) - math.log(5 + 0.01 * videoparam['bitrate'], math.e)), 2)
-            / (2 * math.pow(1.15 + 0.0003 * videoparam['bitrate'], 2)))
-    p3 = math.log(0.008 * videoparam['width'], 10)
-    p4 = 0.5 * math.log(videoparam['frame'] / 24, 1.1)
-    p5 = math.pow(math.log(videoparam['bitrate'], 1000), 5) if videoparam['bitrate'] <= 300 and videoparam['frame'] < 24 \
-        else 1
-    I_coding = parm[0] * (p1 * math.exp(p2)) * p5 + parm[1] * p3 + p4 * parm[2]
+#     videoparam = dict(
+#         width=1080,
+#         frame=24,
 
-    D_pl = 0.74 - 6.45 * math.exp(-videoparam['frame'] / 0.114) + 13.68 * math.exp(-videoparam['bitrate'] / 513.77)
-    P_pl = netparam['lossrate']
-    R_pl = math.exp(-P_pl / D_pl)
+#         # 注意此处的修改------------------------------------------------
 
-    r1 = -(0.07 * rebuffer_duration_sec + 0.19) * rebuffer_number
-    r2 = 0 if rebuffer_number == 0 else rebuffer_number * 0.2
-    I_rebuf = 2*math.exp(r1) + r2
+#         # bitrate=ffprobe.video_info()['bit_rate']
+#         bitrate = 1536
 
-    I_change = 0
-    F_delay = f_delaytime
+#         # 注意此处的修改------------------------------------------------
+#     )
 
-    if netparam['delay'] is None:
-        netparam['delay'] = 0
+#     p1 = 3.5 - (3.5 / (1 + (videoparam['bitrate'] / 180)))
+#     p2 = -(math.pow((math.log(videoparam['frame'], math.e) - math.log(5 + 0.01 * videoparam['bitrate'], math.e)), 2)
+#             / (2 * math.pow(1.15 + 0.0003 * videoparam['bitrate'], 2)))
+#     p3 = math.log(0.008 * videoparam['width'], 10)
+#     p4 = 0.5 * math.log(videoparam['frame'] / 24, 1.1)
+#     p5 = math.pow(math.log(videoparam['bitrate'], 1000), 5) if videoparam['bitrate'] <= 300 and videoparam['frame'] < 24 \
+#         else 1
+#     I_coding = parm[0] * (p1 * math.exp(p2)) * p5 + parm[1] * p3 + p4 * parm[2]
 
-    QoE_Score = parm[3] * I_coding * R_pl - parm[4] * I_change - parm[5] * F_delay + parm[6] * I_rebuf + fei * Bu - delta * netparam['delay']
-    QoE_Score = QoE_Score / 1.2
+#     D_pl = 0.74 - 6.45 * math.exp(-videoparam['frame'] / 0.114) + 13.68 * math.exp(-videoparam['bitrate'] / 513.77)
+#     P_pl = netparam['lossrate']
+#     R_pl = math.exp(-P_pl / D_pl)
 
-    print("rebuffer_number: ",rebuffer_number)
-    print("rebuffer_duration_sec: ",rebuffer_duration_sec)
-    # print(r1)
-    # print(r2)
-    print("I_rebuf: ",I_rebuf)
+#     r1 = -(0.07 * rebuffer_duration_sec + 0.19) * rebuffer_number
+#     r2 = 0 if rebuffer_number == 0 else rebuffer_number * 0.2
+#     I_rebuf = 2*math.exp(r1) + r2
+
+#     I_change = 0
+#     F_delay = f_delaytime
+
+#     if netparam['delay'] is None:
+#         netparam['delay'] = 0
+
+#     QoE_Score = parm[3] * I_coding * R_pl - parm[4] * I_change - parm[5] * F_delay + parm[6] * I_rebuf + fei * Bu - delta * netparam['delay']
+#     QoE_Score = QoE_Score / 1.2
+
+#     print("rebuffer_number: ",rebuffer_number)
+#     print("rebuffer_duration_sec: ",rebuffer_duration_sec)
+#     # print(r1)
+#     # print(r2)
+#     print("I_rebuf: ",I_rebuf)
     
-    # print(parm[6] * I_rebuf)
+#     # print(parm[6] * I_rebuf)
 
 
-    # apn_ready = 1
+#     # apn_ready = 1
 
 
-    # print("bitrate: ",videoparam['bitrate'])
-    # print("frame: ",videoparam['frame'])
-    # print("lossrate: ",netparam['lossrate'])
-    # print("rebuffer_duration_sec: ",rebuffer_duration_sec)
-    # print("rebuffer_number: ",rebuffer_number)
-    # print("delaytime: ",netparam['delay'])
-    print("cal_qoe: ",QoE_Score)
-    print("--------------")
+#     # print("bitrate: ",videoparam['bitrate'])
+#     # print("frame: ",videoparam['frame'])
+#     # print("lossrate: ",netparam['lossrate'])
+#     # print("rebuffer_duration_sec: ",rebuffer_duration_sec)
+#     # print("rebuffer_number: ",rebuffer_number)
+#     # print("delaytime: ",netparam['delay'])
+#     print("cal_qoe: ",QoE_Score)
+#     print("--------------")
 
-cal(0,0)
-cal(0,0)
-cal(1,1)
-cal(1,2)
-cal(1,5)
-cal(2,1)
-cal(2,2)
-cal(2,5)
-cal(3,5)
-cal(3,7)
-cal(3,10)
-cal(5,5)
-cal(5,10)
-cal(5,20)
-cal(1,200)
+# cal(0,0)
+# cal(0,0)
+# cal(1,1)
+# cal(1,2)
+# cal(1,5)
+# cal(2,1)
+# cal(2,2)
+# cal(2,5)
+# cal(3,5)
+# cal(3,7)
+# cal(3,10)
+# cal(5,5)
+# cal(5,10)
+# cal(5,20)
+# cal(1,200)
 # print(math.exp(-1))
+
+
+
+import openpyxl
+import common
+from datetime import datetime
+import threading
+import time
+import signal
+
+workbook = openpyxl.Workbook()
+# 创建一个工作表
+sheet = workbook.create_sheet("QoE")
+# 在第一行写入数据
+sheet.cell(row=1, column=1, value="time")
+sheet.cell(row=1, column=2, value="QoE")
+# 保存文件
+file_name = "QoE.xlsx"
+workbook.save(file_name)
+
+def qoe_save_file(file_name):
+
+    print("----------save start------------")
+    workbook = openpyxl.load_workbook(file_name)
+    # 选择要操作的工作表（这里假设工作表名称为 "qoe"）
+    sheet = workbook["QoE"]
+    # 获取当前工作表的最后一行行号
+    last_row = sheet.max_row
+    # 在下一行继续写入数据
+    sheet.cell(row=last_row + 1, column=1, value=common.golbal_time_save[last_row - 2])
+    sheet.cell(row=last_row + 1, column=2, value=common.golbal_qoe_save[last_row - 2])
+    # 保存文件
+    workbook.save(file_name)
+    print("----------save end------------")
+
+
+
+def signal_handler(sig, frame):
+    print("Received SIGINT (Ctrl+C). Exiting gracefully.")
+    qoe_save_thread.join()
+    # 这里可以添加一些清理工作
+    exit(0)
+
+save_count = 0
+signal.signal(signal.SIGINT, signal_handler)
+
+while True:
+    
+    QoE = 9
+    common.golbal_qoe_save.append(QoE)
+    save_count = save_count + 1
+    current_time = datetime.now()
+    formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
+    common.golbal_time_save.append(formatted_time)
+    qoe_save_thread = threading.Thread(target=qoe_save_file, args=(file_name,))
+    # qoe_save_thread.daemon = True
+    qoe_save_thread.start()
+    qoe_save_thread.join()
+    print(save_count)
+    # time.sleep(3)
+
+
+
+
+
+
+
+
+
+
+
+

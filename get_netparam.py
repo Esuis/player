@@ -122,7 +122,7 @@ class ScapyPcap:
             for pkt in data_list[i]:
                 ack = pkt[TCP].ack
                 if ack in ack_list and ack != 1:
-                    if pkt[IPv6].src == "2001:250:1001:1044::c1":  # 只考虑客户端的ack
+                    if pkt[IPv6].src == "2001:250:1001:1044::c3":  # 只考虑客户端的ack
                         pktnum -= 1  # 只考虑客户端发包情况时，滤除服务器发包被抓到的包
                         pass
                     else:
@@ -151,7 +151,7 @@ class ScapyPcap:
         pktnum = 200  # 每200包计算一次包到达速率
         pktvel = 0
         for pkt in self.packets:
-            if pkt[IPv6].dst == "2001:250:1001:1044::c1":  # 只考虑客户端收包情况
+            if pkt[IPv6].dst == "2001:250:1001:1044::c3":  # 只考虑客户端收包情况
                 if j == pktnum:
                     last_time = pkt[TCP].time
                     pktvel = (last_time - tmp_time) / pktnum
@@ -176,7 +176,7 @@ class ScapyPcap:
         for pkt in self.packets:
             ack = pkt[TCP].ack
             if ack in ack_list and ack != 1:
-                if pkt[IPv6].dst == "2001:250:1001:1044::c1":  # 只考虑客户端的ack
+                if pkt[IPv6].dst == "2001:250:1001:1044::c3":  # 只考虑客户端的ack
                     # j -= 1
                     pass
                 else:
@@ -313,5 +313,5 @@ if __name__ == '__main__':
     filter_packets('data_ori.pcap', 'data.pcap', '2001:250:1001:1044::9d')
     WangluoPcap = ScapyPcap('data.pcap')
     WangluoPcap.GetLossrate()
-    GetDelay('data_ori.pcap', '2001:250:1001:1044::c1')
+    GetDelay('data_ori.pcap', '2001:250:1001:1044::c3')
 

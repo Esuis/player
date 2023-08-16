@@ -10,8 +10,10 @@ from scapy.layers.inet6 import IPv6
 import queue
 import os
 import glob
-import time
 import common
+import openpyxl
+from datetime import datetime
+import signal
 
 
 # 全局变量
@@ -63,10 +65,36 @@ def cleanup():
                 os.remove(file)
                 print(f"Deleted file: {file}")
 
-        
+def qoe_save_file(file_name):
 
-def QoE_th_1(m3u8_path):
+    print("----------save start------------")
+    workbook = openpyxl.load_workbook(file_name)
+    # 选择要操作的工作表（这里假设工作表名称为 "qoe"）
+    sheet = workbook["QoE"]
+    # 获取当前工作表的最后一行行号
+    last_row = sheet.max_row
+    # 在下一行继续写入数据
+    sheet.cell(row=last_row + 1, column=1, value=common.golbal_time_save[last_row - 2])
+    sheet.cell(row=last_row + 1, column=2, value=common.golbal_qoe_save[last_row - 2])
+    # 保存文件
+    workbook.save(file_name)
+    print("----------save end------------")
+    
+    
+
+def QoE_th_1(m3u8_path,file_name):
     global pcap_counter, apn_ready
+    save_count = 0
+
+    # ^C处理，避免文件保存过程中程序意外终止损坏文件
+    def signal_handler(sig, frame):
+        print("Received SIGINT (Ctrl+C). Exiting gracefully.")
+        qoe_save_thread.join()
+        exit(0)
+
+    signal.signal(signal.SIGINT, signal_handler)
+
+
     while capture_flag:
         count = 0
         # 等2s，等第一个数据包抓完
@@ -75,6 +103,20 @@ def QoE_th_1(m3u8_path):
             count = 1
         pcap_name = pcap_queue.get()
         QoE = cal_qoe.QoEScore(pcap_name,m3u8_path)
+
+        # 注意qoe文件写入保存时不可中断，使用signal处理中断信号
+        common.golbal_qoe_save.append(QoE)
+        # save_count = save_count + 1
+        current_time = datetime.now()
+        formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
+        common.golbal_time_save.append(formatted_time)
+        qoe_save_thread = threading.Thread(target=qoe_save_file, args=(file_name,))
+        qoe_save_thread.daemon = True
+        qoe_save_thread.start()
+        qoe_save_thread.join()
+        # print(save_count)
+
+
         # if common.golbal_qoeParamter[3] < 0:
         #     common.golbal_qoeParamter[7] = last_qoe
             # QoE = last_qoe
@@ -100,18 +142,28 @@ def QoE_th():
 def main(m3u8_path):
     global capture_flag
 
-
     print("yes")
     while True:
         print(os.path.exists(m3u8_path))
         if os.path.exists(m3u8_path):
             break
     
+    # create a excel to save qoe
+    workbook = openpyxl.Workbook()
+    # 创建一个工作表
+    sheet = workbook.create_sheet("QoE")
+    # 在第一行写入数据
+    sheet.cell(row=1, column=1, value="time")
+    sheet.cell(row=1, column=2, value="QoE")
+    # 保存文件
+    file_name = "QoE.xlsx"
+    workbook.save(file_name)
+    
     capture_thread = threading.Thread(target=capture_pkt)
     capture_thread.daemon = True
     capture_thread.start()
 
-    qoe_thread = threading.Thread(target=QoE_th_1, args=(m3u8_path,))
+    qoe_thread = threading.Thread(target=QoE_th_1, args=(m3u8_path,file_name))
     qoe_thread.daemon = True
     qoe_thread.start()
 
@@ -122,6 +174,9 @@ def main(m3u8_path):
 
     # time.sleep(100)
     # capture_flag = False
+
+
+
 
     capture_thread.join()
     qoe_thread.join()
