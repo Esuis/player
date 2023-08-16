@@ -209,7 +209,7 @@ def cal(rebuffer_number,rebuffer_duration_sec):
     print("cal_qoe: ",QoE_Score)
     print("--------------")
 
-
+cal(0,0)
 cal(0,0)
 cal(1,1)
 cal(1,2)
