@@ -13,7 +13,6 @@ import glob
 import common
 import openpyxl
 from datetime import datetime
-import signal
 
 
 # 全局变量
@@ -74,8 +73,8 @@ def qoe_save_file(file_name):
     # 获取当前工作表的最后一行行号
     last_row = sheet.max_row
     # 在下一行继续写入数据
-    sheet.cell(row=last_row + 1, column=1, value=common.golbal_time_save[last_row - 2])
-    sheet.cell(row=last_row + 1, column=2, value=common.golbal_qoe_save[last_row - 2])
+    sheet.cell(row=last_row + 1, column=1, value=common.golbal_time_save[last_row - 1])
+    sheet.cell(row=last_row + 1, column=2, value=common.golbal_qoe_save[last_row - 1])
     # 保存文件
     workbook.save(file_name)
     print("----------save end------------")
@@ -109,6 +108,7 @@ def QoE_th_1(m3u8_path,file_name):
         # save_count = save_count + 1
         current_time = datetime.now()
         formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
+        print("---------------------qoe time save----------------------:  ",formatted_time)
         common.golbal_time_save.append(formatted_time)
         qoe_save_thread = threading.Thread(target=qoe_save_file, args=(file_name,))
         qoe_save_thread.daemon = True
@@ -173,7 +173,8 @@ def main(m3u8_path):
     # cleanup_thread.start()
 
     # time.sleep(100)
-    # capture_flag = False
+    # capture_flag = False 
+    #
 
 
 
