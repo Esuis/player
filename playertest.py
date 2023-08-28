@@ -233,14 +233,14 @@ def play():
     print('clear flie done')
 
 def main():
-    print("---------------------------V1---------------------------")
+    print("---------------------------V2---------------------------")
     
     output_path = 'front_end/static/hls_file/output.m3u8'
     save_thread = threading.Thread(target=QoE_Score.main,args=(output_path,))
 
     save_thread.start()
     host = '0.0.0.0'
-    port = 12396
+    port = 12417
     player_thread = threading.Thread(target=app.app.run,args=(host, port))
     player_thread.start()
     while True:
