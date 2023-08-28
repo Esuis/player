@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>ckplayer</title>
+		<link type="text/css" rel="stylesheet" href="ckplayer/css/ckplayer.css" />
+        <script type="text/javascript" src="ckplayer/hls.js/hls.min.js"></script>
+		<link rel="stylesheet" type="text/css" href="ckplayer/css/ckplayer.css">
+		<script type="text/javascript" src="ckplayer/js/ckplayer.js"></script>
+	</head>
+	<body>
+		
+		<div class="video" style="width: 100%; height: 500px;max-width: 800px;">播放容器</div>
+		<script>
+			//调用开始
+			var videoObject = {
+				container: '.video', //容器的ID或className
+				plug:'hls.js',//设置使用hls插件
+				video:'output.m3u8'
+			};
+			var videoPlayer=new ckplayer(videoObject)//调用播放器并赋值给变量player
+
+            // 记录中断播放次数
+            var pauseCount = 0;
+            // 记录暂停时间
+            var pauseTime = 0;
+            // 记录恢复时间
+            var replayTime = 0;
+            // 总中断时长
+            var totalPause = 0;
+            var date = new Date();
+            var last_play_time = 0;
+            var now_play_time = 0;
+            var not_first = 0;
+            var playtime_count = 0;
+            var play_end = 0;
+            const interval = 4;
+            var timerId;
+            var time_update_1s = 0;
+            var pauseTime_update_1s = 0;
+
+            // 监听视频暂停事件
+            videoPlayer.buffer(function(start) {
+                // console.log('load video error: ' + this.error().code + ', src:' + this.currentSrc())
+                // this.error(null)
+                // urls.shift();  // 删除加载失败的那一条
+                // videoPlayer.src(urls);  // 失败重新加载
+                // 更新中断播放次数
+                pauseCount++;
+
+                // 获取当前视频播放的时间点
+                date = new Date();
+                pauseTime = date.getTime();
+
+                // 发送数据到后端
+                var data = {
+                    'pause_count': pauseCount
+                };
+
+                // 使用Ajax发送数据
+                fetch('/update_count', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                }).then(
+                    // 数据格式
+                    // 可以验证是否可以和服务器建立联系
+                    response => {
+                        console.log('联系服务器成功了');
+                        console.log('response---', response);
+                        return response.json()
+                    },
+                    error => {
+                        console.log('联系服务器失败了', error);
+                        // 返回一个新的Promise，防止继续向下走
+                        return new Promise()
+                    }
+                    ).then(
+                    // 真正的数据
+                    response => {
+                        console.log('获取数据成功了', response);
+                    },
+                    error => {
+                        console.log('获取数据失败了', error);
+                    }
+                );
+
+                // 启动定时器，每秒向后端发送数据
+                timerId = setInterval(function() {
+                    // 向后端发送数据的代码
+                    
+                    date = new Date();
+                    time_update_1s = date.getTime();
+                    //这是每秒都会获取的总暂停时间，当暂停结束，会在播放时再发送一次最终的总暂停时间
+                    //每秒的总暂停时间 = 上一次总暂停时间 + （每秒更新的物理时间 - 暂停时的物理时间）
+                    pauseTime_update_1s = totalPause + (time_update_1s - pauseTime)/1000;
+
+                    // 发送数据到后端
+                    var data = {
+                        'pause_time': pauseTime_update_1s
+                    };
+
+                    // 使用Ajax发送数据
+                    fetch('/update_time', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(data)
+                    });
+
+                }, 1000); // 1000毫秒 = 1秒
+
+
+
+
+            });
+
+            // 监听视频播放事件
+            videoPlayer.buffer(function(end) {
+
+                if (not_first == 0){
+                    not_first = 1;
+                    return;
+                }
+                
+                clearInterval(timerId); // 停止定时器的执行
+                date = new Date();
+                replayTime = date.getTime();
+                // 发送最终的总暂停时间
+                totalPause = totalPause + (replayTime - pauseTime)/1000;
+
+                // 发送数据到后端
+                var data = {
+                    'pause_time': totalPause
+                };
+
+                // 使用Ajax发送数据
+                fetch('/update_time', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+            });
+
+
+            // 监听视频更新事件
+            videoPlayer.time(function(t) {
+
+                playtime_count++;
+                console.log('playtime_count: ',playtime_count);
+        
+                if (playtime_count >= interval){
+                    playtime_count = 0
+                    console.log('interval');
+
+                    now_play_time = t;
+
+                    // 发送数据到后端
+                    var data = {
+                        'now_play_time': now_play_time
+                    };
+
+                    // 使用Ajax发送数据
+                    fetch('/update_nowtime', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(data)
+                    });
+
+                }
+            });
+
+
+            // 监听视频播放完毕事件
+            videoPlayer.ended(function() {
+
+                play_end = 1;
+
+                // 发送数据到后端
+                var data = {
+                    'play_end': play_end
+                };
+
+                // 使用Ajax发送数据
+                fetch('/update_ended', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                console.log("视频播放结束");
+
+            });
+
+
+            // 播放器错误处理
+            function handleError() {
+                // 视频加载错误时，暂停视频播放
+                videoPlayer.pause();
+
+            }
+
+		</script>
+		</p>
+		<p id="state"></p>
+		<p id="state2"></p>
+	</body>
+</html>
